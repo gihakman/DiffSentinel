@@ -105,35 +105,88 @@ export default function App() {
             </div>
 
             <div className="stat-row">
-              <div className="stat">
+              <div className="stat clean">
                 <div className="value">
-                  {stats ? String(stats.clean) : "–"}
+                  {stats ? String(stats.clean).padStart(2, "0") : "–"}
                 </div>
-                <div className="label" style={{ color: "var(--diff-green)" }}>
-                  Clean verdicts
+                <div className="label">Clean verdicts</div>
+                <div className="meter">
+                  <span
+                    style={{
+                      width:
+                        stats && stats.total > 0
+                          ? `${Math.round((stats.clean / stats.total) * 100)}%`
+                          : "0%",
+                    }}
+                  />
+                </div>
+                <div className="sub">
+                  {stats && stats.total > 0
+                    ? `${Math.round((stats.clean / stats.total) * 100)}% of ledger`
+                    : "no data yet"}
                 </div>
               </div>
-              <div className="stat">
+              <div className="stat suspicious">
                 <div className="value">
-                  {stats ? String(stats.suspicious) : "–"}
+                  {stats ? String(stats.suspicious).padStart(2, "0") : "–"}
                 </div>
-                <div className="label" style={{ color: "var(--accent)" }}>
-                  Suspicious
+                <div className="label">Suspicious</div>
+                <div className="meter">
+                  <span
+                    style={{
+                      width:
+                        stats && stats.total > 0
+                          ? `${Math.round((stats.suspicious / stats.total) * 100)}%`
+                          : "0%",
+                    }}
+                  />
+                </div>
+                <div className="sub">
+                  {stats && stats.total > 0
+                    ? `${Math.round((stats.suspicious / stats.total) * 100)}% of ledger`
+                    : "no data yet"}
                 </div>
               </div>
-              <div className="stat">
+              <div className="stat malicious">
                 <div className="value">
-                  {stats ? String(stats.malicious) : "–"}
+                  {stats ? String(stats.malicious).padStart(2, "0") : "–"}
                 </div>
-                <div className="label" style={{ color: "var(--diff-red)" }}>
-                  Malicious
+                <div className="label">Malicious</div>
+                <div className="meter">
+                  <span
+                    style={{
+                      width:
+                        stats && stats.total > 0
+                          ? `${Math.round((stats.malicious / stats.total) * 100)}%`
+                          : "0%",
+                    }}
+                  />
+                </div>
+                <div className="sub">
+                  {stats && stats.total > 0
+                    ? `${Math.round((stats.malicious / stats.total) * 100)}% of ledger`
+                    : "no data yet"}
                 </div>
               </div>
-              <div className="stat">
+              <div className="stat total">
                 <div className="value">
-                  {ledgerSize !== null ? String(ledgerSize) : "–"}
+                  {ledgerSize !== null
+                    ? String(ledgerSize).padStart(2, "0")
+                    : "–"}
                 </div>
                 <div className="label">Total on chain</div>
+                <div className="meter">
+                  <span
+                    style={{
+                      width: ledgerSize !== null && ledgerSize > 0 ? "100%" : "0%",
+                    }}
+                  />
+                </div>
+                <div className="sub">
+                  {ledgerSize !== null && ledgerSize > 0
+                    ? `${ledgerSize} verified commit${ledgerSize === 1 ? "" : "s"}`
+                    : "empty"}
+                </div>
               </div>
             </div>
 

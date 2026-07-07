@@ -162,35 +162,109 @@ button {
 .hero .stat-row {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0;
+  gap: 12px;
   margin-top: 48px;
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
 }
 
 .hero .stat {
-  padding: 22px 20px 22px 0;
-  border-right: 1px solid var(--border);
+  position: relative;
+  padding: 22px 20px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--border-strong);
+  border-radius: var(--radius);
+  transition: border-color 160ms linear, transform 160ms linear;
 }
 
-.hero .stat:last-child {
-  border-right: 0;
+.hero .stat:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+}
+
+.hero .stat.clean {
+  border-top-color: var(--diff-green);
+}
+
+.hero .stat.suspicious {
+  border-top-color: var(--accent);
+}
+
+.hero .stat.malicious {
+  border-top-color: var(--diff-red);
+}
+
+.hero .stat.total {
+  border-top-color: var(--text-primary);
 }
 
 .hero .stat .value {
   font-family: var(--font-mono);
-  font-size: 30px;
+  font-size: 44px;
   font-weight: 500;
-  letter-spacing: -0.02em;
+  line-height: 1;
+  letter-spacing: -0.03em;
   color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
 }
 
 .hero .stat .label {
-  margin-top: 4px;
+  margin-top: 12px;
   color: var(--text-muted);
-  font-size: 12px;
-  letter-spacing: 0.06em;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.14em;
   text-transform: uppercase;
+}
+
+.hero .stat.clean .label {
+  color: var(--diff-green);
+}
+
+.hero .stat.suspicious .label {
+  color: var(--accent);
+}
+
+.hero .stat.malicious .label {
+  color: var(--diff-red);
+}
+
+.hero .stat .meter {
+  margin-top: 14px;
+  height: 3px;
+  background: var(--canvas);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.hero .stat .meter > span {
+  display: block;
+  height: 100%;
+  background: var(--border-strong);
+  transition: width 220ms linear;
+}
+
+.hero .stat.clean .meter > span {
+  background: var(--diff-green);
+}
+
+.hero .stat.suspicious .meter > span {
+  background: var(--accent);
+}
+
+.hero .stat.malicious .meter > span {
+  background: var(--diff-red);
+}
+
+.hero .stat.total .meter > span {
+  background: var(--text-primary);
+}
+
+.hero .stat .sub {
+  margin-top: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
 }
 
 .hero .cta-row {
