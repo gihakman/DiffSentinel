@@ -35,23 +35,29 @@ export default function App() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      try {
-        const [s, f, size, recent] = await Promise.all([
-          getStats(),
-          getFeeConfig(),
-          getLedgerSize(),
-          getRecentVerdicts(20),
-        ]);
-        if (cancelled) return;
-        setStats(s);
-        setFee(f);
-        setLedgerSize(size);
-        setVerdicts(recent);
-        setLoadError(null);
-      } catch (e) {
-        if (cancelled) return;
-        setLoadError((e as Error)?.message ?? "failed to load contract state");
-      }
+      // Read each field independently so one failure does not kill the
+      // rest of the page. Errors are logged to the browser console so you
+      // can inspect them via DevTools.
+      const safe = async <T,>(label: string, fn: () => Promise<T>) => {
+        try {
+          return await fn();
+        } catch (e) {
+          console.error(`[DiffSentinel] ${label} failed:`, e);
+          if (!cancelled) {
+            setLoadError((prev) => prev ?? (e as Error)?.message ?? String(e));
+          }
+          return null;
+        }
+      };
+
+      const s = await safe("stats", getStats);
+      if (!cancelled && s) setStats(s);
+      const size = await safe("ledger_size", getLedgerSize);
+      if (!cancelled && size !== null) setLedgerSize(size);
+      const f = await safe("fee_config", getFeeConfig);
+      if (!cancelled && f) setFee(f);
+      const recent = await safe("recent_verdicts", () => getRecentVerdicts(20));
+      if (!cancelled && recent) setVerdicts(recent);
     })();
     return () => {
       cancelled = true;
@@ -101,7 +107,7 @@ export default function App() {
             <div className="stat-row">
               <div className="stat">
                 <div className="value">
-                  {stats ? stats.clean : "–"}
+                  {stats ? String(stats.clean) : "–"}
                 </div>
                 <div className="label" style={{ color: "var(--diff-green)" }}>
                   Clean verdicts
@@ -109,7 +115,7 @@ export default function App() {
               </div>
               <div className="stat">
                 <div className="value">
-                  {stats ? stats.suspicious : "–"}
+                  {stats ? String(stats.suspicious) : "–"}
                 </div>
                 <div className="label" style={{ color: "var(--accent)" }}>
                   Suspicious
@@ -117,7 +123,7 @@ export default function App() {
               </div>
               <div className="stat">
                 <div className="value">
-                  {stats ? stats.malicious : "–"}
+                  {stats ? String(stats.malicious) : "–"}
                 </div>
                 <div className="label" style={{ color: "var(--diff-red)" }}>
                   Malicious
@@ -125,11 +131,29 @@ export default function App() {
               </div>
               <div className="stat">
                 <div className="value">
-                  {ledgerSize ?? "–"}
+                  {ledgerSize !== null ? String(ledgerSize) : "–"}
                 </div>
                 <div className="label">Total on chain</div>
               </div>
             </div>
+
+            {loadError && !stats && (
+              <div
+                className="mono"
+                style={{
+                  marginTop: 24,
+                  padding: "12px 16px",
+                  color: "var(--diff-red)",
+                  border: "1px solid var(--border)",
+                  background: "var(--surface)",
+                  fontSize: 12.5,
+                }}
+              >
+                Could not read contract state: {loadError}. Check the browser
+                console for details, then click refresh in the console panel
+                below.
+              </div>
+            )}
           </div>
         </section>
 

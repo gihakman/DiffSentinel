@@ -28,104 +28,109 @@ export type FeeConfig = {
 
 const client = readClient();
 
-// Simple in-flight de-dupe so React strict-mode doesn't double-hit the RPC.
-const inflight = new Map<string, Promise<unknown>>();
+// The GenLayer SDK deserializes u64 to `bigint`. React can render a plain
+// bigint but many downstream utilities cannot; normalize at the boundary.
+const toNum = (v: unknown): number => {
+  if (typeof v === "number") return v;
+  if (typeof v === "bigint") return Number(v);
+  if (typeof v === "string") return Number(v);
+  return 0;
+};
 
-async function once<T>(key: string, fn: () => Promise<T>): Promise<T> {
-  const existing = inflight.get(key);
-  if (existing) return existing as Promise<T>;
-  const p = fn().finally(() => {
-    // Give the response a very small cache window so a rapid re-render
-    // (React double-invoke, tab focus) doesn't re-fire.
-    setTimeout(() => inflight.delete(key), 200);
-  });
-  inflight.set(key, p);
-  return p as Promise<T>;
+const toStr = (v: unknown): string => {
+  if (typeof v === "bigint") return v.toString();
+  return String(v ?? "");
+};
+
+async function read<T>(name: string, args: unknown[] = []): Promise<T> {
+  try {
+    const raw = await client.readContract({
+      address: CONTRACT_ADDRESS,
+      functionName: name,
+      args: args as never,
+    });
+    return raw as T;
+  } catch (e) {
+    console.error(`[DiffSentinel] readContract(${name}) failed:`, e);
+    throw e;
+  }
 }
 
 export async function getStats(): Promise<Stats> {
-  return once("stats", async () => {
-    const raw = (await client.readContract({
-      address: CONTRACT_ADDRESS,
-      functionName: "stats",
-      args: [],
-    })) as Stats;
-    return raw;
-  });
+  const raw = (await read<Record<string, unknown>>("stats")) ?? {};
+  return {
+    clean: toNum(raw.clean),
+    suspicious: toNum(raw.suspicious),
+    malicious: toNum(raw.malicious),
+    total: toNum(raw.total),
+  };
 }
 
 export async function getFeeConfig(): Promise<FeeConfig> {
-  return once("fee_config", async () => {
-    const raw = (await client.readContract({
-      address: CONTRACT_ADDRESS,
-      functionName: "fee_config",
-      args: [],
-    })) as FeeConfig;
-    return raw;
-  });
+  const raw = (await read<Record<string, unknown>>("fee_config")) ?? {};
+  return {
+    recipient: toStr(raw.recipient),
+    fee_bps: toNum(raw.fee_bps),
+    total_fees_paid_out_wei: toStr(raw.total_fees_paid_out_wei),
+  };
 }
 
 export async function getRecentVerdicts(limit = 20): Promise<Verdict[]> {
-  return once(`recent:${limit}`, async () => {
-    const raw = (await client.readContract({
-      address: CONTRACT_ADDRESS,
-      functionName: "recent_verdicts",
-      args: [limit],
-    })) as Verdict[];
-    return raw;
+  const raw = (await read<unknown[]>("recent_verdicts", [limit])) ?? [];
+  return raw.map((v) => {
+    const o = v as Record<string, unknown>;
+    return {
+      repo: toStr(o.repo),
+      base_commit: toStr(o.base_commit),
+      target_commit: toStr(o.target_commit),
+      classification: toStr(o.classification),
+      reasoning: toStr(o.reasoning),
+      red_flags: toStr(o.red_flags),
+      submitted_by: toStr(o.submitted_by),
+      timestamp: toStr(o.timestamp),
+      fee_paid_wei: toStr(o.fee_paid_wei),
+    };
   });
 }
 
 export async function getLedgerSize(): Promise<number> {
-  return once("ledger_size", async () => {
-    const raw = (await client.readContract({
-      address: CONTRACT_ADDRESS,
-      functionName: "ledger_size",
-      args: [],
-    })) as bigint | number;
-    return typeof raw === "bigint" ? Number(raw) : raw;
-  });
+  const raw = await read<unknown>("ledger_size");
+  return toNum(raw);
 }
 
 export async function getOwner(): Promise<string> {
-  return once("owner_address", async () => {
-    const raw = (await client.readContract({
-      address: CONTRACT_ADDRESS,
-      functionName: "owner_address",
-      args: [],
-    })) as string;
-    return raw;
-  });
+  const raw = await read<unknown>("owner_address");
+  return toStr(raw);
 }
 
 export async function hasVerdict(
   repo: string,
   target: string,
 ): Promise<boolean> {
-  const raw = (await client.readContract({
-    address: CONTRACT_ADDRESS,
-    functionName: "has_verdict",
-    args: [repo, target],
-  })) as boolean;
-  return raw;
+  return await read<boolean>("has_verdict", [repo, target]);
 }
 
 export async function getVerdict(
   repo: string,
   target: string,
 ): Promise<Verdict> {
-  const raw = (await client.readContract({
-    address: CONTRACT_ADDRESS,
-    functionName: "get_verdict",
-    args: [repo, target],
-  })) as Verdict;
-  return raw;
+  const raw = (await read<Record<string, unknown>>(
+    "get_verdict",
+    [repo, target],
+  )) ?? {};
+  return {
+    repo: toStr(raw.repo),
+    base_commit: toStr(raw.base_commit),
+    target_commit: toStr(raw.target_commit),
+    classification: toStr(raw.classification),
+    reasoning: toStr(raw.reasoning),
+    red_flags: toStr(raw.red_flags),
+    submitted_by: toStr(raw.submitted_by),
+    timestamp: toStr(raw.timestamp),
+    fee_paid_wei: toStr(raw.fee_paid_wei),
+  };
 }
 
-/**
- * Submit a verify_commit transaction using the wallet-bound client and
- * return both the tx hash and a poller for status updates.
- */
 export async function submitVerifyCommit(
   from: `0x${string}`,
   provider: unknown,
