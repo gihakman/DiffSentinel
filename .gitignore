@@ -1,0 +1,35 @@
+# Environment
+.env
+.env.*
+!.env.example
+
+# Node
+node_modules/
+dist/
+build/
+out/
+.cache/
+*.tsbuildinfo
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Build artifacts
+artifacts/
+cache/
+target/
+
+# Deploy platforms
+.vercel/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
