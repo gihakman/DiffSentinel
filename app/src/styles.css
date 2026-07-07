@@ -134,6 +134,26 @@ button {
   color: var(--text-primary);
 }
 
+.icon-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-secondary);
+  transition: color 120ms linear, border-color 120ms linear,
+    background 120ms linear;
+  text-decoration: none;
+}
+
+.icon-link:hover {
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+  background: var(--surface-2);
+}
+
 /* Hero ----------------------------------------------------------------- */
 
 .hero {

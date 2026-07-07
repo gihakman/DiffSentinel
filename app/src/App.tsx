@@ -19,6 +19,7 @@ import {
 } from "./lib/contract";
 import { Console } from "./components/Console";
 import { Ledger } from "./components/Ledger";
+import { GithubMark, REPO_URL } from "./components/GithubMark";
 
 const shortSha = (s: string) => (s.length > 12 ? `${s.slice(0, 10)}…` : s);
 const shortAddr = (s: string) => `${s.slice(0, 6)}…${s.slice(-4)}`;
@@ -479,25 +480,42 @@ curl -X POST https://rpc-bradbury.genlayer.com \\
             <Logo size={18} showWordmark={false} /> DiffSentinel · a GenLayer
             Intelligent Contract on {chain.name}
           </span>
-          <span>
-            Contract{" "}
+          <span
+            style={{ display: "inline-flex", alignItems: "center", gap: 18 }}
+          >
             <a
               target="_blank"
               rel="noreferrer"
-              href={explorerContractUrl(CONTRACT_ADDRESS)}
+              href={REPO_URL}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                textDecoration: "none",
+              }}
             >
-              {shortAddr(CONTRACT_ADDRESS)} ↗
-            </a>{" "}
-            · Deploy{" "}
-            <a
-              target="_blank"
-              rel="noreferrer"
-              href={explorerTxUrl(
-                "0xc6695f9f4f573ee60befcf76812964e8c81c2d420ab483802a768e2d3eb87d00",
-              )}
-            >
-              tx ↗
+              <GithubMark size={15} /> source
             </a>
+            <span>
+              Contract{" "}
+              <a
+                target="_blank"
+                rel="noreferrer"
+                href={explorerContractUrl(CONTRACT_ADDRESS)}
+              >
+                {shortAddr(CONTRACT_ADDRESS)} ↗
+              </a>{" "}
+              · Deploy{" "}
+              <a
+                target="_blank"
+                rel="noreferrer"
+                href={explorerTxUrl(
+                  "0xc6695f9f4f573ee60befcf76812964e8c81c2d420ab483802a768e2d3eb87d00",
+                )}
+              >
+                tx ↗
+              </a>
+            </span>
           </span>
         </div>
       </footer>
@@ -519,7 +537,17 @@ function Header({ wallet }: { wallet: ReturnType<typeof useWallet> }) {
           <a href="#ledger">Ledger</a>
           <a href="#integrate">Integrate</a>
         </nav>
-        <div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <a
+            className="icon-link"
+            href={REPO_URL}
+            target="_blank"
+            rel="noreferrer"
+            aria-label="View source on GitHub"
+            title="View source on GitHub"
+          >
+            <GithubMark />
+          </a>
           {state.kind === "unavailable" && (
             <span className="mono muted">
               <span className="dot off" /> No wallet detected
